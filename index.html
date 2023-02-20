@@ -5,10 +5,24 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
   <script src="script.js" defer></script>
   <title>Tic-Tac-Toe</title>
 </head>
 <body>
-  
+  <div class="container">
+    <h1>Let's play Tic-Tac-Toe</h1>
+    <div id="board-container"></div>
+    <div id="scoreboard">
+      <div id="turn-display">
+        <h2>Who's turn is it?</h2>
+        <div id="display-container">
+          <div class="turn-btn" id="x-turn-display">X</div>
+          <div class="turn-btn" id="o-turn-display">O</div>
+          <div id="turn-display-slider"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
