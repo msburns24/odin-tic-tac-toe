@@ -4,7 +4,10 @@ const gameboard = (() => {
     ["","",""],
     ["","",""]
   ]
+
   let turn = "X"
+
+  // cellnum = 3*row + col
 
   const getBoard = () => board
   const getTurn = () => turn
@@ -25,6 +28,10 @@ const gameboard = (() => {
   const takeTurn = () => {
     if (turn == "X") { turn = "O"; console.log("Turn now O") }
     else { turn = "X", console.log("Turn now X") }
+  }
+
+  const isAWin = (sign) => {
+
   }
 
   return { board, getBoard, getTurn, isValidMove, makeMark, takeTurn }
