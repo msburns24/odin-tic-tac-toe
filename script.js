@@ -6,6 +6,16 @@ class Gameboard {
     ["","",""],
     ["","",""]
   ]
+  _winningCases = [
+    [ [0,0], [0,1], [0,2] ],
+    [ [1,0], [1,1], [1,2] ],
+    [ [2,0], [2,1], [2,2] ],
+    [ [0,0], [1,0], [2,0] ],
+    [ [0,1], [1,1], [2,1] ],
+    [ [0,2], [1,2], [2,2] ],
+    [ [0,0], [1,1], [2,2] ],
+    [ [0,2], [1,1], [2,0] ]
+  ]
   _turnQueue = ["X", "O"]
   _currentTurn = this._turnQueue[0]
 
@@ -13,7 +23,6 @@ class Gameboard {
     this.gridElement = new GridElement(this)
   }
 
-  // cellnum = 3*row + col
   get board() { 
     return this._board
   }
@@ -36,10 +45,58 @@ class Gameboard {
   }
 
   nextTurn() {
-    this._turnQueue.reverse()
-    this._currentTurn = this._turnQueue[0]
+    if (!this.isNotWin(this._currentTurn)) {
+      console.log("Winner!")
+    } else {
+      this._turnQueue.reverse()
+      this._currentTurn = this._turnQueue[0]
+    }
+  }
+
+  isNotWin(sign) {
+    let playerCells = this.getPlayerCells(sign)
+    let inARow, winCase
+
+    for (let caseIndex = 0; caseIndex < this._winningCases.length; caseIndex++) {
+      inARow = 0
+      winCase = this._winningCases[caseIndex]
+
+      winCase.forEach(pair => {
+        const pairStr = JSON.stringify(pair)
+        const playerCellsStr = JSON.stringify(playerCells)
+        const valIndex = playerCellsStr.indexOf(pairStr)
+
+        if (valIndex != -1) { inARow++ }
+      })
+
+      if (inARow == 3) { return false }
+    }
+
+    return true
+  }
+
+  getPlayerCells(sign) {
+    let playerCells = []
+    for (let row=0; row<3; row++) {
+      for (let col=0; col<3; col++) {
+        if (this._board[row][col] == sign) {
+          playerCells.push( [row, col] )
+        }
+      }
+    }
+
+    return playerCells
+  }
+
+  arrayInArray(arrVal, arrCheck) {
+    const arrValStr = JSON.stringify(arrVal)
+    const arrCheckStr = JSON.stringify(arrCheck)
+    const valIndex = arrCheckStr.indexOf(arrValStr)
+
+    return ( valIndex != -1 )
   }
 }
+
 
 class GridElement {
 
