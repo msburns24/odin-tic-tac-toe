@@ -1,109 +1,131 @@
-const gameboard = (() => {
-  let board = [
+class Gameboard {
+
+  // private properties
+  _board = [
     ["","",""],
     ["","",""],
     ["","",""]
   ]
+  _turnQueue = ["X", "O"]
+  _currentTurn = this._turnQueue[0]
 
-  let turn = "X"
+  constructor() {
+    this.gridElement = new GridElement(this)
+  }
 
   // cellnum = 3*row + col
+  get board() { 
+    return this._board
+  }
 
-  const getBoard = () => board
-  const getTurn = () => turn
+  get currentTurn() { 
+    return this._currentTurn 
+  }
 
-  const isValidMove = (row, col) => {
-    return (board[row][col] === "" )
+  isValidMove(row, col) {
+    return ( this._board[row][col] === "" )
   }
   
-  const makeMark = (player, row, col) => {
-    if (isValidMove(row, col)) { 
-      board[row][col] = player.sign
+  makeMark(row, col) {
+    if (this.isValidMove(row, col)) {
+      this._board[row][col] = this._currentTurn
       return true
     } else {
       return false
     }
   }
 
-  const takeTurn = () => {
-    if (turn == "X") { turn = "O"; console.log("Turn now O") }
-    else { turn = "X", console.log("Turn now X") }
+  nextTurn() {
+    this._turnQueue.reverse()
+    this._currentTurn = this._turnQueue[0]
   }
-
-  const isAWin = (sign) => {
-
-  }
-
-  return { board, getBoard, getTurn, isValidMove, makeMark, takeTurn }
-})()
-
-const Player = (playerSign) => {
-  const playersSign = playerSign
-  const sign = () => playersSign
-
-  return { sign }
 }
 
-function makeGameboard(gameboard) {
-  for (let row=0; row<3; row++) {
-    for (let col=0; col<3; col++){
-      let cellContents = gameboard.board[row][col]
-      let newCellDiv = $(`
-        <div>${cellContents}</div>
-      `)
-      newCellDiv = setCellStyling(newCellDiv, row, col, cellContents)
-      $('#board-container').append(newCellDiv)
+class GridElement {
+
+  constructor(gameboard) {
+    this.gameboard = gameboard
+    this.createGridElement()
+    this.turnSlider = new TurnSlider(this.gameboard)
+  }
+
+  createGridElement() {
+    this.gridArray = []
+
+    for (let row=0; row<3; row++) {
+      this.gridArray.push([])
+
+      for (let col=0; col<3; col++){
+        let cellContents = this.gameboard.board[row][col]
+        let newCellDiv = $(`<div>${cellContents}</div>`)
+        newCellDiv = this.setCellStyling(newCellDiv, row, col, cellContents)
+
+        newCellDiv.on('click', { gridEl: this, gameboard: this.gameboard }, this.cellClicked)
+
+        this.gridArray[row].push(newCellDiv)
+        $('#board-container').append(newCellDiv)
+      }
     }
   }
-}
 
-function turnCellTo(sign, row, col) {
-  const cell = $(`#${row}-${col}`)
-  cell.text(sign)
-  cell.addClass(`fill-${sign}`)
-}
-
-function setCellStyling(newCellDiv, row, col, cellContents) {
-  newCellDiv.addClass('cell')
-  if (row != 0) { newCellDiv.addClass("top-border")    }
-  if (row != 2) { newCellDiv.addClass("bottom-border") }
-  if (col != 0) { newCellDiv.addClass("left-border")   }
-  if (col != 2) { newCellDiv.addClass("right-border")  }
-  if (cellContents !== "") {
-    newCellDiv.addClass(`fill-${cellContents}`)
+  setCellStyling(newCellDiv, row, col, cellContents) {
+    newCellDiv.addClass('cell')
+    if (row != 0) { newCellDiv.addClass("top-border")    }
+    if (row != 2) { newCellDiv.addClass("bottom-border") }
+    if (col != 0) { newCellDiv.addClass("left-border")   }
+    if (col != 2) { newCellDiv.addClass("right-border")  }
+    if (cellContents !== "") {
+      newCellDiv.addClass(`fill-${cellContents}`)
+    }
+    newCellDiv.attr("id", `${row}-${col}`)
+    return newCellDiv
   }
-  newCellDiv.attr("id", `${row}-${col}`)
-  return newCellDiv
-}
 
-function setupTurnSlider() {
-  $('#display-container').addClass(`${gameboard.getTurn()}-move`)
-  $('#turn-display-slider').addClass(`${gameboard.getTurn()}-shown`)
-}
+  cellClicked(e) {
+    const gameboard = e.data.gameboard
+    const gridEl = e.data.gridEl
 
-function switchTurnSlider() {
-  $('#turn-display-slider').toggleClass('X-shown')
-  $('#turn-display-slider').toggleClass('O-shown')
-
-  $('#display-container').toggleClass('X-move')
-  $('#display-container').toggleClass('O-move')
-}
-
-function setupMarkButtons() {
-  $('.cell').on('click', (e) => {
     const row = e.target.id.split('-')[0]  
     const col = e.target.id.split('-')[1]
-    if (gameboard.isValidMove(row, col)) {
-      gameboard.makeMark(gameboard.getTurn(), row, col)
-      turnCellTo(gameboard.getTurn(), row, col)
-      gameboard.takeTurn()
-      switchTurnSlider()
+
+    if (gameboard.makeMark(row, col)) {
+      gridEl.turnCellTo(e.data.gameboard.currentTurn, row, col)
+      gridEl.turnSlider.switchTurnSlider()
+      gameboard.nextTurn()
     }
-  })
+  }
+
+  turnCellTo(sign, row, col) {
+    const cell = $(`#${row}-${col}`)
+    cell.text(sign)
+    cell.addClass(`fill-${sign}`)
+  }
 }
 
+class TurnSlider {
+
+  constructor(gameboard) {
+    this.gameboard = gameboard
+    this.displayContainer = $('#display-container')
+    this.turnDisplaySlider = $('#turn-display-slider')
+    this.addClasses()
+  }
+
+  addClasses() {
+    this.displayContainer.addClass(`${this.gameboard.currentTurn}-move`)
+    this.turnDisplaySlider.addClass(`${this.gameboard.currentTurn}-shown`)
+  }
+
+  switchTurnSlider() {
+    this.displayContainer.toggleClass('X-move')
+    this.displayContainer.toggleClass('O-move')
+
+    this.turnDisplaySlider.toggleClass('X-shown')
+    this.turnDisplaySlider.toggleClass('O-shown')
+  }
+}
+
+
 $(document).ready(function() {
-  makeGameboard(gameboard)
-  setupMarkButtons()
-  setupTurnSlider()
+  const gameboard = new Gameboard()
 })
